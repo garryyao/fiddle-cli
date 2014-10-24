@@ -1,0 +1,13 @@
+{
+    "name": "",
+    "main": "index.html",
+    "dependencies": {
+        "gulp": "",
+        "gulp-autoprefixer": "",
+        "gulp-inject": "",
+        "gulp-less": "",
+        "gulp-sass": "",
+        "gulp-sourcemaps": "",
+        "gulp-webserver": ""
+    }
+}
