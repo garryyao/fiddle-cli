@@ -1,6 +1,6 @@
 {
   "name": "fiddle-cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "create local fiddles from command line, develop it locally, version controlled as a GIST, or to preview it as JSFiddle/CodePen.",
   "main": "cli.js",
   "bin": {
