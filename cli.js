@@ -17,7 +17,7 @@ init.description('generate a local fiddle with all skeleton files')
     .action(function () {
         // the list of fiddle files to create
         fs.copySync(path.resolve(__dirname, 'templates/'), '.');
-        fs.copySync(path.resolve(__dirname, 'templates/.gitignore'), '.gitignore');
+        fs.copySync(path.resolve(__dirname, 'templates/._gitignore'), '.gitignore');
 
         // we're to harvest more manifest options from cli prompts.
         if (init.prompt) {
@@ -36,10 +36,10 @@ init.description('generate a local fiddle with all skeleton files')
         }
     });
 
+var SILENCE = {silent: true};
 program.command('gist')
     .description('create this fiddle as a gist in your Github account')
     .action(function () {
-        var SILENCE = {silent: true};
         exec('git status', SILENCE, function (code) {
             if (!code) {
                 console.error('terminated: already a git (possibly gist) repository');
