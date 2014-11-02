@@ -5,6 +5,7 @@ var fs = require('fs-extra');
 var path = require('path');
 var util = require('util');
 var program = require('commander');
+var SILENCE = {silent: true};
 
 
 // Describe CLI arguments
@@ -36,7 +37,33 @@ init.description('generate a local fiddle with all skeleton files')
         }
     });
 
-var SILENCE = {silent: true};
+var clone = program.command('clone [link]');
+clone.description('clone an existing fiddle from JSFiddle/Codepen')
+    .action(function (link) {
+        var URL = require('url');
+        if (link.match(/jsfiddle\.net/)) {
+            var cmd = ['casperjs', path.resolve(__dirname, 'jsfiddle.js'), URL.resolve(link, 'show')].join(' ');
+            var $ = require("cheerio").load(exec(cmd, SILENCE).output);
+            var fiddle = {
+                js: $('script').text().match(/\/\/<\!\[CDATA\[([\w\W]+)\/\/\]\]>/)[1].trim(),
+                html: $('body').html().trim(),
+                css: $('style').text().trim()
+            };
+
+            if (fiddle.html) {
+                fs.writeFileSync('fiddle.html', fiddle.html);
+            }
+
+            if (fiddle.css) {
+                fs.writeFileSync('fiddle.css', fiddle.css);
+            }
+
+            if (fiddle.js) {
+                fs.writeFileSync('fiddle.js', fiddle.js);
+            }
+        }
+    });
+
 program.command('gist')
     .description('create this fiddle as a gist in your Github account')
     .action(function () {

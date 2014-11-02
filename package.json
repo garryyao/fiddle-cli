@@ -18,6 +18,8 @@
   "author": "Garry Yao <yaojun85@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "casperjs": "^1.1.0-beta3",
+    "cheerio": "^0.17.0",
     "commander": "^2.4.0",
     "fs-extra": "^0.12.0",
     "open": "0.0.5",
