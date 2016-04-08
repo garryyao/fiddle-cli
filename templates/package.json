@@ -1,13 +1,26 @@
 {
     "name": "",
     "main": "index.html",
-    "dependencies": {
-        "gulp": "",
-        "gulp-autoprefixer": "",
-        "gulp-inject": "",
-        "gulp-less": "",
-        "gulp-sass": "",
-        "gulp-sourcemaps": "",
-        "gulp-webserver": ""
+    "scripts": {
+        "serve": "node_modules/.bin/webpack-dev-server --inline --hot",
+        "build": "node_modules/.bin/webpack",
+        "watch": "node_modules/.bin/webpack --watch",
+        "publish": "npm run build && fiddle publish",
+        "jsfiddle": "npm run build && git add -A && git commit -m 'bump' && git push origin -f master && fiddle run"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "babel-loader": "",
+        "babel-preset-es2015": "",
+        "jade-html-loader": "",
+        "jade": "",
+        "sass-loader": "",
+        "node-sass": "",
+        "webpack": "",
+        "webpack-dev-server": "",
+        "css-loader": "",
+        "html-loader": "",
+        "extract-text-webpack-plugin": "",
+        "html-webpack-plugin": ""
     }
 }
