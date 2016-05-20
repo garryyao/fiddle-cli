@@ -1,19 +1,15 @@
-#!/usr/bin/env node --harmony-destructuring
+#!/usr/bin/env node --harmony-destructuring --harmony-rest-parameters
 'use strict';
 
+const Promise = require('bluebird');
 const shelljs = require('shelljs');
 const colour = require('colour');
-const co = require('co');
-const denodeify = require('denodeify');
-var fs = require('fs-extra');
+var fs = Promise.promisifyAll(require('fs-extra'));
 var path = require('path');
 var partial_right = require('lodash/partialRight');
 var util = require('util');
 var program = require('commander');
-const exec_loud = denodeify(shelljs.exec, function done(code, stdout, stderr) {
-    // yield a triple of exec
-    return [null, [code, stdout, stderr]];
-});
+const exec_loud = Promise.promisify(shelljs.exec, {multiArgs:1});
 const exec = partial_right(exec_loud, {silent: true});
 const open = require('open');
 const GIST_REGEX = /https:\/\/(?:gist\.github\.com).+?\b([\w\d]+?)(?:\b|$)/;
@@ -32,6 +28,10 @@ function exit(msg) {
     process.exit();
 }
 
+function error(msg) {
+    console.error('[error]'.error, msg);
+}
+
 function info(msg) {
     console.log('[ok]'.info, msg);
 }
@@ -40,7 +40,22 @@ function echo(msg) {
     console.log('[>]'.data, msg);
 }
 
-const gist_url = co.wrap(function* () {
+function farm(name) {
+  // the list of fiddle files to create
+  const dir = path.resolve(__dirname, `templates/${name}`);
+  return fs.copySync(dir, '.', {
+    filter: function(file) {
+      const local_file = path.relative(dir, file);
+      const local_file_exists = fs.existsSync(local_file);
+      if (!local_file_exists) {
+        echo(`Adding ${local_file}`);
+      }
+      return !local_file_exists;
+    }
+  });
+}
+
+const gist_url = Promise.coroutine(function* () {
     const [, out] = yield exec('git remote -v');
     const match = out.match(GIST_REGEX);
     if (!match) {
@@ -49,7 +64,7 @@ const gist_url = co.wrap(function* () {
     return match[0];
 });
 
-const gist_id = co.wrap(function* () {
+const gist_id = Promise.coroutine(function* () {
     const url = yield gist_url();
     if (!url) {
         return null;
@@ -63,34 +78,77 @@ const gist_id = co.wrap(function* () {
 // Describe CLI arguments
 program.version('0.0.1').usage('<command> [options]');
 
-var init = program.command('init');
+var init = program.command('init <sub> [others...]')
+  .description('generate a local fiddle with fiddle files')
+  .option('-v, --prompt', '("jsfiddle" sub only) verbose mode ask more about JSFiddle details')
+  .action(Promise.coroutine(function* init() {
+    const subs = Array.from(arguments).filter(arg => {
+      return typeof arg === 'string' && arg;
+    });
+    //console.log(subs);
+    subs.forEach(sub => {
+      const verb = 'action_' + sub;
+      if (this[verb]) {
+        this[verb]();
+        info(`created files for sub: ${sub}`);
+      } else {
+        error(`sorry, unknown sub: ${sub}`);
+      }
+    });
 
-init.description('generate a local fiddle with fiddle files')
-    .option('-v, --prompt', 'verbose mode ask more about JSFiddle details')
-    .action(co.wrap(function* () {
-        // the list of fiddle files to create
-        fs.copySync(path.resolve(__dirname, 'templates/'), '.');
+    // check for necessary npm install call
+    const stat = yield fs.statAsync('./package.json');
+    const diff = Date.now() - Date.parse(stat.mtime);
+    if (diff < 1e3) {
+      yield exec_loud('npm i -q');
+    }
+  }));
 
-        // we're to harvest more manifest options from cli prompts.
-        if (init.prompt) {
-            const yaml = require('yamljs');
-            const prompt = require('prompt');
-            prompt.start();
-            prompt.get(require('./assets/manifest'), function (err, result) {
-                if (err) {
-                    console.log('terminated on error');
-                    process.exit(1);
-                }
-                fs.writeFileSync('fiddle.manifest', yaml.stringify(result));
-            });
-        }
+/**
+ * scaffolding a jsfiddle repo
+ */
+init.action_jsfiddle = function() {
+  farm('jsfiddle');
 
-        yield exec_loud('npm i');
-    }));
+  // we're to harvest more manifest options from cli prompts.
+  if (this.prompt) {
+    const yaml = require('yamljs');
+    const prompt = require('prompt');
+    prompt.start();
+    prompt.get(require('./assets/manifest'), function(err, result) {
+      if (err) {
+        console.log('terminated on error');
+        process.exit(1);
+      }
+      fs.writeFileSync('fiddle.manifest', yaml.stringify(result));
+    });
+  }
+}
+
+/**
+ * scaffolding an ES6(Babel+Webpack) repo
+ */
+init.action_babel = function() {
+  farm('babel_webpack');
+
+  // we're to harvest more manifest options from cli prompts.
+  if (this.prompt) {
+    const yaml = require('yamljs');
+    const prompt = require('prompt');
+    prompt.start();
+    prompt.get(require('./assets/manifest'), function(err, result) {
+      if (err) {
+        console.log('terminated on error');
+        process.exit(1);
+      }
+      fs.writeFileSync('fiddle.manifest', yaml.stringify(result));
+    });
+  }
+}
 
 program.command('clone [link]')
     .description('clone from an existing public JSFiddle link')
-    .action(co.wrap(function* (link) {
+    .action(Promise.coroutine(function* (link) {
         if(!/jsfiddle\.net\/[^/]+?\/[^/]+?\/?$/.test(link)) {
             exit('unexpected JSFiddle link, e.g. http://jsfiddle.net/garryyao/bT4Lc/');
         }
@@ -169,7 +227,7 @@ program.command('publish')
 
 program.command('open')
     .description('open fiddle files from this gist on JSFiddle')
-    .action(co.wrap(function* () {
+    .action(Promise.coroutine(function* () {
         const url = yield gist_url();
         if (!url) {
             exit('working copy is not yet a gist, try to run "fiddle publish" first.');
