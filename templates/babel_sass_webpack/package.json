@@ -1,0 +1,21 @@
+{
+  "name": "",
+  "main": "index.html",
+  "scripts": {
+    "build": "node_modules/.bin/webpack",
+    "watch": "node_modules/.bin/webpack --watch",
+    "serve": "node_modules/.bin/webpack-dev-server --inline --hot"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "babel-loader": "",
+    "babel-core": "",
+    "babel-preset-es2015": "",
+    "sass-loader": "",
+    "node-sass": "",
+    "css-loader": "",
+    "webpack": "",
+    "extract-text-webpack-plugin": "",
+    "webpack-dev-server": ""
+  }
+}

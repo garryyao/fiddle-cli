@@ -1,4 +1,4 @@
-#!/usr/bin/env node --harmony-destructuring --harmony-rest-parameters
+#!/usr/bin/env node
 'use strict';
 
 const Promise = require('bluebird');
@@ -128,23 +128,12 @@ init.action_jsfiddle = function() {
 /**
  * scaffolding an ES6(Babel+Webpack) repo
  */
-init.action_babel = function() {
-  farm('babel_webpack');
+init.action_babel = farm.bind(farm, 'babel_webpack');
 
-  // we're to harvest more manifest options from cli prompts.
-  if (this.prompt) {
-    const yaml = require('yamljs');
-    const prompt = require('prompt');
-    prompt.start();
-    prompt.get(require('./assets/manifest'), function(err, result) {
-      if (err) {
-        console.log('terminated on error');
-        process.exit(1);
-      }
-      fs.writeFileSync('fiddle.manifest', yaml.stringify(result));
-    });
-  }
-}
+/**
+ * scaffolding an ES6(Babel+Webpack) with SASS loader repo
+ */
+init.action_babel_sass = farm.bind(farm, 'babel_sass_webpack');
 
 program.command('clone [link]')
     .description('clone from an existing public JSFiddle link')
