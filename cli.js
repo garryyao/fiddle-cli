@@ -79,8 +79,6 @@ const gist_id = Promise.coroutine(function* () {
 program.version('0.0.1').usage('<command> [options]');
 
 var init = program.command('init <sub> [others...]')
-  .description('generate a local fiddle with fiddle files')
-  .option('-v, --prompt', '("jsfiddle" sub only) verbose mode ask more about JSFiddle details')
   .action(Promise.coroutine(function* init() {
     const subs = Array.from(arguments).filter(arg => {
       return typeof arg === 'string' && arg;
@@ -134,6 +132,10 @@ init.action_babel = farm.bind(farm, 'babel_webpack');
  * scaffolding an ES6(Babel+Webpack) with SASS loader repo
  */
 init.action_babel_sass = farm.bind(farm, 'babel_sass_webpack');
+
+// Describe on manual the list of available sub types.
+const supported_subs = Object.keys(init).filter(key => key.startsWith('action_')).map( key => key.replace(/action_/, '')).join(', ');
+init.description(`scaffolding from... <${supported_subs}>`);
 
 program.command('clone [link]')
     .description('clone from an existing public JSFiddle link')
